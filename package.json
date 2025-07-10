@@ -1,0 +1,16 @@
+{
+  "name": "target_product_details_scraper",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start" : "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+   "dependencies": {
+    "playwright": "^1.53.1",
+    "xlsx": "^0.18.5"
+  },
+  "description": "target product details scraper"
+}
