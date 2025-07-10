@@ -1,11 +1,10 @@
-// helpers/extractors.js
 import {
   formatHandleFromUrl,
   extractSKU,
   calculatePrices,
 } from "./formatters.js";
 import { getDescription } from "./description.js";
-import { SELECTORS } from "./constants.js";
+import { SELECTORS, DEFAULT_VALUES } from "./constants.js";
 import { gotoWithRetries } from "./gotoWithRetries.js";
 
 export async function extractCartierProductData(page, url) {
@@ -21,25 +20,25 @@ export async function extractCartierProductData(page, url) {
       .$eval(SELECTORS.TITLE, (el) => el.innerText.trim())
       .catch(() => handle.replace(/_/g, " "));
 
-    // Clean breadcrumb tags
     const breadcrumbs = await page
-      .$$eval(BREADCRUMB_ITEMS, (anchors) =>
-        anchors
-          .map((a) => a.textContent.trim())
-          .filter((text) => text && !/>/.test(text))
-          .join(",")
+      .$$eval(
+        SELECTORS.BREADCRUMB_ITEMS,
+        (anchors) =>
+          anchors
+            .map((a) => a.textContent.trim())
+            .filter((text) => text && ! />/.test(text))
+            .join(",")
       )
       .catch(() => "");
 
     const description = await getDescription(page);
-
     const { currentPrice, originalPrice } = await extractPrice(page);
-    const { variantPrice, compareAtPrice } = calculatePrices(currentPrice);
+    const { variantPrice, compareAtPrice } = calculatePrices(currentPrice, originalPrice);
 
-    // Image extraction
     const imageHandles = await page
-      .$$eval(IMAGE_GALLERY_IMAGES, (imgs) =>
-        imgs.map((img) => img.src).filter(Boolean)
+      .$$eval(
+        SELECTORS.IMAGE_GALLERY_IMAGES,
+        (imgs) => imgs.map((img) => img.src).filter(Boolean)
       )
       .catch(() => []);
 
@@ -47,20 +46,20 @@ export async function extractCartierProductData(page, url) {
       Handle: handle,
       Title: title,
       "Body (HTML)": description,
-      Vendor: "cartier",
-      Type: "Jewellery",
+      Vendor: DEFAULT_VALUES.VENDOR,
+      Type: DEFAULT_VALUES.TYPE,
       Tags: breadcrumbs,
       "Variant SKU": sku,
       "Cost per item": currentPrice,
-      "Original Price": originalPrice,
+      "Original Price": originalPrice,  // Separate original price field
       "Variant Price": variantPrice,
       "Variant Compare At Price": compareAtPrice,
       "Image Src": imageHandles[0] || "",
-      "Variant Fulfillment Service": "manual",
-      "Variant Inventory Policy": "deny",
-      "Variant Inventory Tracker": "shopify",
-      Status: "Active",
-      Published: "TRUE",
+      "Variant Fulfillment Service": DEFAULT_VALUES.FULFILLMENT_SERVICE,
+      "Variant Inventory Policy": DEFAULT_VALUES.INVENTORY_POLICY,
+      "Variant Inventory Tracker": DEFAULT_VALUES.INVENTORY_TRACKER,
+      Status: DEFAULT_VALUES.STATUS,
+      Published: DEFAULT_VALUES.PUBLISHED,
       "product.metafields.custom.original_prodect_url": url,
     };
 
@@ -77,24 +76,24 @@ export async function extractCartierProductData(page, url) {
 }
 
 export async function extractPrice(page) {
-  const container = await page.$("main#pageBodyContainer");
+  const container = await page.$(SELECTORS.PRICE_CONTAINER);
 
   let currentPrice = null;
   let originalPrice = null;
 
   if (container) {
-    currentPrice = await container
-      .$eval("product-price", (el) =>
-        parseFloat(el.textContent.replace(/[^\d.]/g, ""))
-      )
-      .catch(() => null);
+    currentPrice = await container.$eval(SELECTORS.PRICE, el =>
+      parseFloat(el.textContent.replace(/[^\d.]/g, ''))
+    ).catch(() => null);
 
-    originalPrice = await container
-      .$eval("span.h-text-line-through", (el) =>
-        parseFloat(el.textContent.replace(/[^\d.]/g, ""))
-      )
-      .catch(() => null);
+    // Try to find original price if available (strikethrough price)
+    originalPrice = await container.$eval('span.h-text-line-through', el =>
+      parseFloat(el.textContent.replace(/[^\d.]/g, '')))
+    .catch(() => null);
   }
 
-  return { currentPrice, originalPrice };
+  return { 
+    currentPrice, 
+    originalPrice: originalPrice || currentPrice 
+  };
 }

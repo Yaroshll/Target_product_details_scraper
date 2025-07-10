@@ -8,6 +8,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "type": "module",
    "dependencies": {
     "playwright": "^1.53.1",
     "xlsx": "^0.18.5"

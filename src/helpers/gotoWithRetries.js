@@ -19,7 +19,7 @@ export async function gotoWithRetries(page, url, retries = 2) {
       });
 
       // Wait for Cartier-specific selector to confirm successful load
-      await page.waitForSelector("product-price", { timeout: 20000 });
+      await page.waitForSelector("main#pageBodyContainer", { timeout: 20000 });
 
       return; // Success
     } catch (error) {
