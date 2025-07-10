@@ -1,25 +1,34 @@
-import { SELECTORS } from "./constants.js";
+// helpers/description.js
+import { SELECTORS } from "../constants.js";
 
 export async function getDescription(page) {
-  let fullDescription = "";
   try {
-    // Get the full visible description including text inside <span>
-    const description = await page.$eval(    DESCRIPTION_CONTENT  ,  (el) => el.innerText.trim()
-  ).catch(() => "");
-    
-  
-    const description_h1 = await page
-      .$eval(DESCRIPTION_H1, (el) => el.innerHTML.trim())
-      .catch(() => "");
-    
-    const description_li = await page
-      .$eval(DESCRIPTION_LI, (el) => el.innerHTML.trim())
-      .catch(() => "");
+    const mainDesc = await page.$eval(
+      SELECTORS.PRODUCT.DESCRIPTION.MAIN, 
+      el => el.textContent.trim()
+    ).catch(() => "");
 
-    // Combine both
-    fullDescription = `${description}\n\n${description_h1}\n ${description_li}`;
-    return fullDescription;
-  } catch (err) {
-    console.warn("⚠️ Description extraction failed:", err.message);
+    const detailsContainer = await page.$(SELECTORS.PRODUCT.DESCRIPTION.DETAILS.CONTAINER);
+    let detailsText = "";
+
+    if (detailsContainer) {
+      const header = await detailsContainer.$eval(
+        SELECTORS.PRODUCT.DESCRIPTION.DETAILS.HEADER, 
+        el => el.textContent.trim()
+      ).catch(() => "");
+
+      const items = await detailsContainer.$$eval(
+        SELECTORS.PRODUCT.DESCRIPTION.DETAILS.ITEMS,
+        items => items.map(item => item.textContent.trim())
+      ).catch(() => []);
+
+      if (header) detailsText += `\n\n${header}:`;
+      if (items.length) detailsText += `\n${items.map(item => `• ${item}`).join('\n')}`;
+    }
+
+    return `${mainDesc}${detailsText}`.trim();
+  } catch (error) {
+    console.error("⚠️ Description extraction failed:", error.message);
+    return "";
   }
 }

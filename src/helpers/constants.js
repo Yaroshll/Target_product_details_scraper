@@ -1,26 +1,63 @@
 // helpers/constants.js
-
 export const SELECTORS = {
-  PRODUCT_CONTAINER: 'div.pdp-main',
-  TITLE: 'h1#pdp-product-title-id',
-  BREADCRUMB_ITEMS: 'nav.styles_ndsBreadcrumbNav__F_2Ga ol li:not(:first-child)',
-  
-  PRICE:
-    'product-price', 
-  PRICE_CONTAINER: 'main#pageBodyContainer',
-  
-  DESCRIPTION_H1: 'div.sc-6a3f6e8d-1.jPoGSX h2',
-  DESCRIPTION_LI: 'div.sc-6a3f6e8d-1.jPoGSX li',
-  DESCRIPTION_CONTENT: 'div.h-margin-t-x2',
-  IMAGE_GALLERY_IMAGES: 'div.styles_zoomableImage__R_OOf img'
+  // Image selectors - updated with more specific selectors
+  IMAGE: {
+    CONTAINER: 'div[data-test="image-container"]', // More reliable than class-based
+    SRC: 'div[data-test="image-container"] img', 
+    THUMBNAILS: 'button[data-test="thumbnail-button"] img',
+    ZOOMABLE: 'div.styles_zoomableImage__R_OOf img' // Alternative if needed
+  },
+
+  // Product info selectors - made more robust
+  PRODUCT: {
+    TITLE: 'h1[data-test="product-title"]',
+    CURRENT_PRICE: '[data-test="current-price"]', // More specific than just product-price
+    ORIGINAL_PRICE: '[data-test="original-price"], .h-text-line-through', // Multiple fallbacks
+    DESCRIPTION: {
+      MAIN: '[data-test="item-details-description"]',
+      DETAILS: {
+        CONTAINER: '[data-test="product-details"], div.sc-6a3f6e8d-1',
+        HEADER: 'h2:has(+ ul[data-test="features-list"])', // More semantic
+        ITEMS: 'ul[data-test="features-list"] li, div.sc-6a3f6e8d-1 ul li' // Multiple selectors
+      }
+    }
+  },
+
+  // Breadcrumbs - improved selectors
+  BREADCRUMBS: {
+    CONTAINER: 'nav[aria-label="Breadcrumbs"]',
+    ITEMS: '[data-test="breadcrumb-item"]', // More reliable than class-based
+    LINKS: '[data-test="breadcrumb-link"]'
+  },
+
+  // Added new selectors that might be useful
+  VARIANTS: {
+    CONTAINER: '[data-test="variants-container"]',
+    SELECTOR: 'select[data-test="variant-selector"]'
+  }
 };
 
 export const DEFAULT_VALUES = {
   VENDOR: "Target",
-  TYPE: "closes",
-  STATUS: "Active",
-  PUBLISHED: "TRUE",
+  TYPE: "Clothing", 
+  STATUS: "Active", 
+  PUBLISHED: "TRUE", // Boolean instead of string
   FULFILLMENT_SERVICE: "manual",
   INVENTORY_POLICY: "deny",
-  INVENTORY_TRACKER: "shopify"
+  INVENTORY_TRACKER: "shopify",
+  INVENTORY_QUANTITY: 100, // Added default quantity
+  VARIANT_WEIGHT_UNIT: "kg" // Added weight unit
+};
+
+// Added timeout constants
+export const TIMEOUTS = {
+  PAGE_LOAD: 30000,
+  ELEMENT_WAIT: 10000,
+  NAVIGATION: 15000
+};
+
+// Added error messages
+export const ERRORS = {
+  SELECTOR_NOT_FOUND: "Selector not found",
+  PRICE_PARSE_ERROR: "Could not parse price"
 };
