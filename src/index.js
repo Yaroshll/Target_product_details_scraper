@@ -2,7 +2,7 @@
 import { launchBrowser } from './helpers/browser.js';
 import { extractTargetProductData } from './helpers/extractors.js';
 import { saveToCSVAndExcel } from './helpers/fileIO.js';
-import { TIMEOUTS } from './constants.js';
+import { TIMEOUTS } from './helpers/constants.js';
 
 const urls = [
   'https://www.target.com/p/girls-39-sleeveless-tank-dress-cat-38-jack-8482/-/A-94147428?preselect=93629653#lnk=sametab'
