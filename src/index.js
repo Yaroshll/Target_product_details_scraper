@@ -5,7 +5,7 @@ import { saveToCSVAndExcel } from './helpers/fileIO.js';
 import { TIMEOUTS } from './helpers/constants.js';
 
 const urls = [
-  'https://www.target.com/p/disney-minnie-mouse-little-girls-tank-jersey-dress-red-5/-/A-1002811070?preselect=1002811070#lnk=sametab'
+  'https://www.target.com/p/boys-10pk-athletic-ankle-socks-cat-jack-white/-/A-51257987?preselect=51140573#lnk=sametab'
 ];
 
 (async () => {

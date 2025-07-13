@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 
 export async function launchBrowser() {
   const browser = await chromium.launch({
-    headless: true,
+    headless: false,
     channel: 'chrome',
     args: [
      '--disable-gpu',

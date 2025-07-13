@@ -1,8 +1,13 @@
+import fs from 'fs'; 
+import path from 'path';
+import xlsx from 'xlsx';
+
 export function saveToCSVAndExcel(productRow, extraImages) {
   const now = new Date();
   const timestamp = now.toISOString().slice(0, 16).replace("T", "_").replace(":", "-");
   const fileName = `Target_products_${timestamp}`;
   const outputDir = './output';
+  
   
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 
