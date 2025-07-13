@@ -1,30 +1,36 @@
+// helpers/description.js
 import { SELECTORS } from "./constants.js";
 
 export async function getDescription(page) {
   try {
-    const main = await page.$eval(
+    // Main description
+    const mainDesc = await page.$eval(
       SELECTORS.PRODUCT.DESCRIPTION.MAIN,
-      el => el.innerText.trim()
-    ).catch(() => "");
+      el => el.innerHTML.trim()
+    ).catch(() => '');
 
-    const header = await page.$eval(
-      SELECTORS.PRODUCT.DESCRIPTION.DETAILS.HEADER,
-      el => el.innerText.trim()
-    ).catch(() => "");
+    // Fit & Style section
+    const detailsContainer = await page.$(SELECTORS.PRODUCT.DESCRIPTION.DETAILS.CONTAINER);
+    let detailsHTML = '';
 
-    const items = await page.$$eval(
-      SELECTORS.PRODUCT.DESCRIPTION.DETAILS.ITEMS,
-      els => els.map(el => el.innerText.trim())
-    ).catch(() => []);
+    if (detailsContainer) {
+      const header = await detailsContainer.$eval(
+        SELECTORS.PRODUCT.DESCRIPTION.DETAILS.HEADER,
+        el => el.textContent.trim()
+      ).catch(() => '');
 
-    let bulletList = "";
-    if (items.length) {
-      bulletList = `\n\n${header}:\n${items.map(i => `• ${i}`).join("\n")}`;
+      const items = await detailsContainer.$$eval(
+        SELECTORS.PRODUCT.DESCRIPTION.DETAILS.ITEMS,
+        items => items.map(item => item.textContent.trim())
+      ).catch(() => []);
+
+      if (header) detailsHTML += `<h2>${header}</h2>`;
+      if (items.length) detailsHTML += `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
     }
 
-    return `${main}${bulletList}`.trim();
-  } catch (err) {
-    console.error("❌ Failed to extract description:", err.message);
+    return `${mainDesc}${detailsHTML}`.trim();
+  } catch (error) {
+    console.error("⚠️ Description extraction failed:", error.message);
     return "";
   }
 }
