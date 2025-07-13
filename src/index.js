@@ -19,7 +19,7 @@ const page = await context.newPage();
 
   for (const url of urls) {
     try {
-      const { productRow, extraImages } = await extractCartierProductData(page, url);
+      const { productRow, extraImages } = await extractTargetProductData(page, url);
       saveToCSVAndExcel(productRow, extraImages);
       console.log(`✅ Scraped and saved: ${url}`);
     } catch (err) {
