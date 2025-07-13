@@ -1,7 +1,7 @@
 import { formatHandleFromUrl, extractSKU, calculatePrices } from "./formatters.js";
 import { getDescription } from "./description.js";
 import { SELECTORS, DEFAULT_VALUES } from "./constants.js";
-import { gotoWithRetries } from "./gotoWithRetries.js";
+import { gotoTargetWithRetries } from "./gotoWithRetries.js";
 // helpers/extractors.js
 export async function extractPrice(page) {
   try {
@@ -32,6 +32,8 @@ export async function extractPrice(page) {
 
 export async function extractTargetProductData(page, url) {
   try {
+      await gotoTargetWithRetries(page, url);
+    
     await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
     await page.waitForSelector(SELECTORS.PRODUCT.TITLE, { timeout: 20000 });
 
