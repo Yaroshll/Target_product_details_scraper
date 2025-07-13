@@ -1,43 +1,31 @@
 import { SELECTORS } from "./constants.js";
 
 export async function getDescription(page) {
-  try {
-    // Click the description button if it exists
-    try {
-      await page.click(SELECTORS.PRODUCT.DESCRIPTION.BUTTON);
-      await page.waitForTimeout(1000); // Wait for animation
-    } catch {
-      console.log("Description button not found or not clickable");
-    }
+  // 1. Click to reveal description
+  await page.$eval(SELECTORS.PRODUCT.DESCRIPTION_BUTTON, btn => btn.click()).catch(() => {});
 
-    // Main description
-    const mainDesc = await page.$eval(
-      SELECTORS.PRODUCT.DESCRIPTION.MAIN,
-      el => el.innerHTML.trim()
-    ).catch(() => '');
+  // 2. Extract main description
+  const main = await page.$eval(
+    SELECTORS.PRODUCT.DESCRIPTION_CONTENT,
+    el => el.innerHTML.trim()
+  ).catch(() => "");
 
-    // Fit & Style section
-    let detailsHTML = '';
-    const detailsContainer = await page.$(SELECTORS.PRODUCT.DESCRIPTION.DETAILS.CONTAINER);
-    
-    if (detailsContainer) {
-      const header = await detailsContainer.$eval(
-        SELECTORS.PRODUCT.DESCRIPTION.DETAILS.HEADER,
-        el => el.textContent.trim()
-      ).catch(() => '');
+  // 3. Extract Fit & style section
+  const header = await page.$eval(
+    SELECTORS.PRODUCT.FIT_STYLE_CONTAINER + " " + SELECTORS.PRODUCT.FIT_STYLE_HEADER,
+    el => el.innerText.trim()
+  ).catch(() => "");
 
-      const items = await detailsContainer.$$eval(
-        SELECTORS.PRODUCT.DESCRIPTION.DETAILS.ITEMS,
-        items => items.map(item => item.textContent.trim())
-      ).catch(() => []);
+  const items = await page.$$eval(
+    SELECTORS.PRODUCT.FIT_STYLE_CONTAINER + " " + SELECTORS.PRODUCT.FIT_STYLE_ITEMS,
+    els => els.map(el => el.innerText.trim())
+  ).catch(() => []);
 
-      if (header) detailsHTML += `<h2>${header}</h2>`;
-      if (items.length) detailsHTML += `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
-    }
-
-    return `${mainDesc}${detailsHTML}`.trim();
-  } catch (error) {
-    console.error("⚠️ Description extraction failed:", error.message);
-    return "";
+  let fitStyleHTML = "";
+  if (header && items.length) {
+    const listItems = items.map(i => `<li>${i}</li>`).join("");
+    fitStyleHTML = `<h2>${header}</h2><ul>${listItems}</ul>`;
   }
+
+  return (main + "\n" + fitStyleHTML).trim();
 }

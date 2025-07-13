@@ -1,38 +1,21 @@
 // helpers/constants.js
 export const SELECTORS = {
-  // Image selectors
-  // Image selectors
-  IMAGE: {
-    CONTAINER: 'div.styles_zoomableImage__R_OOf',
-    SRC: 'div.styles_zoomableImage__R_OOf img',
-    ALL_IMAGES: 'button[data-test="thumbnail-button"] img',
-    THUMBNAILS: 'div[data-test="image-carousel-container"] img'
+   IMAGE: {
+    ZOOMABLE: 'div.styles_zoomableImage__R_OOf img'
   },
-
-  // Product info selectors
   PRODUCT: {
-    TITLE: 'h1[data-test="product-title"]',
+    TITLE: 'h1#pdp-product-title-id',
     CURRENT_PRICE: 'span[data-test="product-price"]',
     ORIGINAL_PRICE: 'span.h-text-line-through',
-    DESCRIPTION: {
-      BUTTON: 'button.styles_button__D8Xvn[href="#ProductDetails-accordion-scroll-id"]',
-      MAIN: 'div[data-test="item-details-description"]',
-      DETAILS: {
-        CONTAINER: 'div.sc-6a3f6e8d-1',
-        HEADER: 'h2.styles_ndsHeading__HcGpD',
-        ITEMS: 'ul.h-display-flex li.sc-6a3f6e8d-0'
-      }
-    }
+    DESCRIPTION_BUTTON: 'button.styles_menuButton___e3Vt[href="#ProductDetails-accordion-scroll-id"]',
+    DESCRIPTION_CONTENT: 'div.h-margin-t-x2[data-test="item-details-description"]',
+    FIT_STYLE_CONTAINER: 'div.sc-6a3f6e8d-1.jPoGSX',
+    FIT_STYLE_HEADER: 'h2',
+    FIT_STYLE_ITEMS: 'ul li span'
   },
-
-  // Breadcrumb navigation
   BREADCRUMBS: {
-    CONTAINER: 'nav[data-test="@web/Breadcrumbs/BreadcrumbNav"]',
-    ITEMS: 'li.styles_listItem__XQB0p',
-    LINKS: 'a[data-test="@web/Breadcrumbs/BreadcrumbLink"]'
-  }
-};
-
+    LINKS: 'nav[aria-label="Breadcrumbs"] a[data-test="@web/Breadcrumbs/BreadcrumbLink"]'
+  }};
 
 export const DEFAULT_VALUES = {
   VENDOR: "Target",
