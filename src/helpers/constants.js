@@ -2,49 +2,27 @@
 export const SELECTORS = {
   // Image selectors
   IMAGE: {
-    CONTAINER: 'div[data-test="image-container"]',
-    SRC: 'div[data-test="image-container"] img',
-    THUMBNAILS: 'button[data-test="thumbnail-button"] img',
-    ZOOMABLE: 'div.styles_zoomableImage__R_OOf img',
-    FALLBACK: 'img[data-test*="image"]' // Additional fallback
+    SRC: 'div.styles_zoomableImage__R_OOf img'
   },
 
   // Product info selectors
   PRODUCT: {
-    TITLE: 'h1[data-test="product-title"]',
-    CURRENT_PRICE: [
-      'span[data-test="product-price"]',
-      'span[data-test="current-price"]',
-      'span.price__current-value'
-    ],
-    ORIGINAL_PRICE: [
-      'span.h-text-line-through',
-      'span[data-test="original-price"]',
-      'span.price__compare'
-    ],
-    PRICE_CONTAINER: '[data-test="product-regular-price"]',
+    TITLE: 'h1#pdp-product-title-id',
+    CURRENT_PRICE: 'span[data-test="product-price"]',
+    ORIGINAL_PRICE: 'span.h-text-line-through',
     DESCRIPTION: {
-      MAIN: '[data-test="item-details-description"]',
+      MAIN: 'div[data-test="item-details-description"]',
       DETAILS: {
-        CONTAINER: '[data-test="product-details"], div.sc-6a3f6e8d-1',
-        HEADER: 'h2:has(+ ul[data-test="features-list"])',
-        ITEMS: 'ul[data-test="features-list"] li, div.sc-6a3f6e8d-1 ul li'
+        CONTAINER: 'div.sc-6a3f6e8d-1.jPoGSX',
+        HEADER: 'h2',
+        ITEMS: 'ul li'
       }
     }
   },
 
   // Breadcrumb navigation
   BREADCRUMBS: {
-    CONTAINER: 'nav[aria-label="Breadcrumbs"]',
-    ITEMS: '[data-test="breadcrumb-item"]',
-    LINKS: '[data-test="breadcrumb-link"]'
-  },
-
-  // Product variants
-  VARIANTS: {
-    CONTAINER: '[data-test="variants-container"]',
-    SELECTOR: 'select[data-test="variant-selector"]',
-    OPTIONS: '[data-test="variant-option"]'
+    LINKS: 'nav[aria-label="Breadcrumbs"] a[data-test="@web/Breadcrumbs/BreadcrumbLink"]'
   }
 };
 
@@ -52,7 +30,7 @@ export const DEFAULT_VALUES = {
   VENDOR: "Target",
   TYPE: "Clothing",
   STATUS: "active",
-  PUBLISHED: true, // Changed to boolean
+  PUBLISHED: true,
   FULFILLMENT_SERVICE: "manual",
   INVENTORY_POLICY: "deny",
   INVENTORY_TRACKER: "shopify",
@@ -67,7 +45,7 @@ export const TIMEOUTS = {
   PAGE_LOAD: 45000,
   ELEMENT_WAIT: 20000,
   NAVIGATION: 30000,
-  ACTION_DELAY: 1500 // Delay between actions
+  ACTION_DELAY: 1500
 };
 
 export const ERRORS = {
@@ -77,7 +55,6 @@ export const ERRORS = {
   PRODUCT_NOT_FOUND: "Product data not found"
 };
 
-// Additional constants for CSV export
 export const CSV_HEADERS = {
   PRODUCT: [
     'Handle',
