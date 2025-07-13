@@ -33,6 +33,7 @@ export const SELECTORS = {
   }
 };
 
+
 export const DEFAULT_VALUES = {
   VENDOR: "Target",
   TYPE: "Clothing",

@@ -17,7 +17,7 @@ export async function gotoTargetWithRetries(page, url, retries = 2) {
       
       // Wait for Target-specific elements to confirm successful load
       await Promise.race([
-        page.waitForSelector(SELECTORS.PRODUCT.TITLE, { timeout: 20000 }),
+        //page.waitForSelector(SELECTORS.PRODUCT.TITLE, { timeout: 20000 }),
         page.waitForSelector(SELECTORS.BREADCRUMBS.ITEMS, { timeout: 20000 }),
         page.waitForTimeout(8000) // Fallback timeout
       ]);
