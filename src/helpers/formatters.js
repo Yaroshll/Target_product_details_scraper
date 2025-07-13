@@ -27,30 +27,12 @@ export function extractSKU(url) {
     return null;
   }
 }
-
 export function calculatePrices(currentPrice, originalPrice) {
-  // Validate inputs
-  if (currentPrice === null || isNaN(currentPrice)) {
-    throw new Error('Invalid current price provided');
-  }
-
-  // Convert to numbers if they're strings
-  const current = typeof currentPrice === 'string' 
-    ? parseFloat(currentPrice.replace(/[^\d.]/g, '')) 
-    : Number(currentPrice);
-
-  const original = originalPrice 
-    ? (typeof originalPrice === 'string' 
-      ? parseFloat(originalPrice.replace(/[^\d.]/g, '')) 
-      : Number(originalPrice))
-    : null;
-
-  // Calculate prices with proper validation
-  const variantPrice = current ? +(current).toFixed(2) : 0;
-  const compareAtPrice = original ? +(original).toFixed(2) : null;
-
-  return { 
-    variantPrice,
-    compareAtPrice: compareAtPrice > variantPrice ? compareAtPrice : null
+  const validatedCurrent = currentPrice || 0; // Ensure we have a number
+  const validatedOriginal = originalPrice || null;
+  
+  return {
+    variantPrice: +(validatedCurrent.toFixed(2)),
+    compareAtPrice: validatedOriginal ? +(validatedOriginal.toFixed(2)) : null
   };
 }

@@ -5,50 +5,65 @@ import { SELECTORS, DEFAULT_VALUES } from "./constants.js";
 import { gotoWithRetries } from "./gotoWithRetries.js";
 
 export async function extractPrice(page) {
+  const defaultPrice = 0; // Default value when extraction fails
+  
   try {
-    // 1. First try precise selectors
-    let currentPrice = await tryPriceSelectors(page, [
-      'span[data-test="product-price"]', // Primary current price
-      'span[data-test="current-price"]', // Alternative
-      'span.price__current-value' // Common class
-    ]);
+    // Current Price Extraction
+    let currentPrice = await page.$eval(
+      SELECTORS.PRODUCT.CURRENT_PRICE,
+      el => {
+        const priceText = el.textContent.trim();
+        const priceValue = parseFloat(priceText.replace(/[^\d.]/g, ''));
+        return isNaN(priceValue) ? null : priceValue;
+      }
+    ).catch(() => null);
 
-    let originalPrice = await tryPriceSelectors(page, [
-      'span.h-text-line-through', // Primary original price
-      'span[data-test="original-price"]', // Alternative
-      'span.price__compare' // Common class
-    ]);
+    // Original Price Extraction
+    let originalPrice = await page.$eval(
+      SELECTORS.PRODUCT.ORIGINAL_PRICE,
+      el => {
+        const priceText = el.textContent.trim();
+        const priceValue = parseFloat(priceText.replace(/[^\d.]/g, ''));
+        return isNaN(priceValue) ? null : priceValue;
+      }
+    ).catch(() => null);
 
-    // 2. Fallback to pattern matching if needed
+    // Fallback: Try extracting from JSON-LD data
     if (!currentPrice) {
-      const priceText = await page.evaluate(() => {
-        const priceEl = document.querySelector('[data-test="product-regular-price"]');
-        return priceEl?.textContent;
-      });
-      
-      if (priceText) {
-        const matches = priceText.match(/\$\d+\.\d{2}/g);
-        if (matches) {
-          currentPrice = parseFloat(matches[0].replace(/[^\d.]/g, ''));
-          originalPrice = matches[1] ? parseFloat(matches[1].replace(/[^\d.]/g, '')) : null;
-        }
+      try {
+        const jsonLd = await page.$eval(
+          'script[type="application/ld+json"]',
+          el => {
+            try {
+              return JSON.parse(el.textContent);
+            } catch {
+              return null;
+            }
+          }
+        );
+        currentPrice = jsonLd?.offers?.price || null;
+      } catch {
+        // Silently fail and use default
       }
     }
 
-    // 3. Final validation
-    if (!currentPrice || isNaN(currentPrice)) {
-      throw new Error('Invalid price value extracted');
-    }
-
-    return { 
-      currentPrice,
-      originalPrice: originalPrice && !isNaN(originalPrice) ? originalPrice : null
+    // Validate and return prices
+    return {
+      currentPrice: validatePrice(currentPrice) ? currentPrice : defaultPrice,
+      originalPrice: validatePrice(originalPrice) ? originalPrice : null
     };
 
   } catch (error) {
-    console.error('⚠️ Price extraction failed:', error.message);
-    throw error;
+    console.error('⚠️ Price extraction failed, using defaults:', error.message);
+    return {
+      currentPrice: defaultPrice,
+      originalPrice: null
+    };
   }
+}
+
+function validatePrice(price) {
+  return price !== null && !isNaN(price) && price >= 0;
 }
 
 async function tryPriceSelectors(page, selectors) {
