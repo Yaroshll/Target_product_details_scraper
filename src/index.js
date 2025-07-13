@@ -1,6 +1,6 @@
 // index.js
 import { launchBrowser } from './helpers/browser.js';
-import { extractCartierProductData } from './helpers/extractors.js';
+import { extractTargetProductData } from './helpers/extractors.js';
 import { saveToCSVAndExcel } from './helpers/fileIO.js';
 
 const urls = [

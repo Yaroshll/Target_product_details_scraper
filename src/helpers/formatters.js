@@ -29,12 +29,26 @@ export function extractSKU(url) {
 }
 
 export function calculatePrices(currentPrice, originalPrice) {
-  // Use original price if available, otherwise calculate compareAtPrice
-  const variantPrice = +(currentPrice).toFixed(2);
-  const compareAtPrice = originalPrice 
-    ? +(originalPrice).toFixed(2)
-    : +(currentPrice * 1.2).toFixed(2);
-  
+  // Validate inputs
+  if (currentPrice === null || isNaN(currentPrice)) {
+    throw new Error('Invalid current price provided');
+  }
+
+  // Convert to numbers if they're strings
+  const current = typeof currentPrice === 'string' 
+    ? parseFloat(currentPrice.replace(/[^\d.]/g, '')) 
+    : Number(currentPrice);
+
+  const original = originalPrice 
+    ? (typeof originalPrice === 'string' 
+      ? parseFloat(originalPrice.replace(/[^\d.]/g, '')) 
+      : Number(originalPrice))
+    : null;
+
+  // Calculate prices with proper validation
+  const variantPrice = current ? +(current).toFixed(2) : 0;
+  const compareAtPrice = original ? +(original).toFixed(2) : null;
+
   return { 
     variantPrice,
     compareAtPrice: compareAtPrice > variantPrice ? compareAtPrice : null

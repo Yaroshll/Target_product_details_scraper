@@ -8,17 +8,23 @@ export async function extractPrice(page) {
   try {
     const currentPrice = await page.$eval(
       SELECTORS.PRODUCT.CURRENT_PRICE,
-      el => parseFloat(el.textContent.replace(/[^\d.]/g, ''))
+      el => {
+        const text = el.textContent.trim();
+        return parseFloat(text.replace(/[^\d.]/g, '')) || null;
+      }
     ).catch(() => null);
 
     const originalPrice = await page.$eval(
       SELECTORS.PRODUCT.ORIGINAL_PRICE,
-      el => parseFloat(el.textContent.replace(/[^\d.]/g, ''))
+      el => {
+        const text = el.textContent.trim();
+        return parseFloat(text.replace(/[^\d.]/g, '')) || null;
+      }
     ).catch(() => null);
 
     return { 
       currentPrice,
-      originalPrice: originalPrice || null // Don't fallback to currentPrice
+      originalPrice
     };
   } catch (error) {
     console.error("⚠️ Price extraction failed:", error.message);
@@ -26,7 +32,8 @@ export async function extractPrice(page) {
   }
 }
 
-export async function extractCartierProductData(page, url) {
+
+export async function extractTargetProductData(page, url) {
   try {
     await gotoWithRetries(page, url);
     console.info("✅ Page loaded, waiting for stability...");
@@ -46,7 +53,15 @@ export async function extractCartierProductData(page, url) {
 
     const description = await getDescription(page);
     const { currentPrice, originalPrice } = await extractPrice(page);
-    const { variantPrice, compareAtPrice } = calculatePrices(currentPrice, originalPrice);
+    
+    if (currentPrice === null) {
+      throw new Error('Could not extract valid current price');
+    }
+
+    const { variantPrice, compareAtPrice } = calculatePrices(
+      currentPrice, 
+      originalPrice
+    );
 
     const imageHandles = await page.$$eval(
       SELECTORS.IMAGE.SRC,
@@ -80,8 +95,7 @@ export async function extractCartierProductData(page, url) {
     }));
 
     return { productRow, extraImages };
-  } catch (error) {
-    console.error(`❌ Error extracting data from ${url}:`, error);
-    throw error;
-  }
-}
+    } catch (error) {
+    console.error(`❌ Error processing ${url}:`, error.message);
+    throw error; // Or return null/error object as needed
+    }}
