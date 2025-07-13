@@ -1,5 +1,5 @@
 // helpers/description.js
-import { SELECTORS } from "./constants.js";
+import { SELECTORS } from "./constants";
 
 export async function getDescription(page) {
   try {
