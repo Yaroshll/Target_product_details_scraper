@@ -29,6 +29,35 @@ export async function extractPrice(page) {
     };
   }
 }
+export async function extractImages(page, handle) {
+  try {
+    // Get main image
+    const mainImage = await page.$eval(
+      SELECTORS.IMAGE.SRC,
+      img => img.src
+    ).catch(() => '');
+
+    // Get all additional images
+    const additionalImages = await page.$$eval(
+      SELECTORS.IMAGE.ALL_IMAGES,
+      imgs => imgs.map(img => img.src).filter(src => src)
+    ).catch(() => []);
+
+    return {
+      mainImage,
+      additionalImages: additionalImages.map(src => ({
+        Handle: handle,
+        "Image Src": src
+      }))
+    };
+  } catch (error) {
+    console.error("⚠️ Image extraction failed:", error.message);
+    return {
+      mainImage: '',
+      additionalImages: []
+    };
+  }
+}
 
 export async function extractTargetProductData(page, url) {
   try {
@@ -54,10 +83,7 @@ export async function extractTargetProductData(page, url) {
     ).catch(() => '');
 
     const description = await getDescription(page);
-    const imageSrc = await page.$eval(
-      SELECTORS.IMAGE.SRC,
-      img => img.src
-    ).catch(() => '');
+    const { mainImage, additionalImages } = await extractImages(page, handle);
 
     return {
       productRow: {
@@ -72,11 +98,11 @@ export async function extractTargetProductData(page, url) {
         "Original Price": originalPrice,
         "Variant Price": variantPrice,
         "Variant Compare At Price": compareAtPrice,
-        "Image Src": imageSrc,
+        "Image Src": mainImage,
         ...DEFAULT_VALUES,
         "product.metafields.custom.original_product_url": url
       },
-      extraImages: [] // Add logic for additional images if needed
+   extraImages: additionalImages // Add logic for additional images if needed
     };
 
   } catch (error) {

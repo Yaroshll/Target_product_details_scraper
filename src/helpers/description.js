@@ -1,8 +1,15 @@
-// helpers/description.js
 import { SELECTORS } from "./constants.js";
 
 export async function getDescription(page) {
   try {
+    // Click the description button if it exists
+    try {
+      await page.click(SELECTORS.PRODUCT.DESCRIPTION.BUTTON);
+      await page.waitForTimeout(1000); // Wait for animation
+    } catch {
+      console.log("Description button not found or not clickable");
+    }
+
     // Main description
     const mainDesc = await page.$eval(
       SELECTORS.PRODUCT.DESCRIPTION.MAIN,
@@ -10,9 +17,9 @@ export async function getDescription(page) {
     ).catch(() => '');
 
     // Fit & Style section
-    const detailsContainer = await page.$(SELECTORS.PRODUCT.DESCRIPTION.DETAILS.CONTAINER);
     let detailsHTML = '';
-
+    const detailsContainer = await page.$(SELECTORS.PRODUCT.DESCRIPTION.DETAILS.CONTAINER);
+    
     if (detailsContainer) {
       const header = await detailsContainer.$eval(
         SELECTORS.PRODUCT.DESCRIPTION.DETAILS.HEADER,

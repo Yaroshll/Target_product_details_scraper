@@ -1,11 +1,12 @@
 // helpers/constants.js
 export const SELECTORS = {
   // Image selectors
+  // Image selectors
   IMAGE: {
     CONTAINER: 'div.styles_zoomableImage__R_OOf',
     SRC: 'div.styles_zoomableImage__R_OOf img',
-    THUMBNAILS: 'button[data-test="thumbnail-button"] img',
-    FALLBACK: 'img[data-test*="image"]'
+    ALL_IMAGES: 'button[data-test="thumbnail-button"] img',
+    THUMBNAILS: 'div[data-test="image-carousel-container"] img'
   },
 
   // Product info selectors
@@ -14,6 +15,7 @@ export const SELECTORS = {
     CURRENT_PRICE: 'span[data-test="product-price"]',
     ORIGINAL_PRICE: 'span.h-text-line-through',
     DESCRIPTION: {
+      BUTTON: 'button.styles_button__D8Xvn[href="#ProductDetails-accordion-scroll-id"]',
       MAIN: 'div[data-test="item-details-description"]',
       DETAILS: {
         CONTAINER: 'div.sc-6a3f6e8d-1',

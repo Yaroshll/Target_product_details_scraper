@@ -11,14 +11,15 @@ export async function gotoTargetWithRetries(page, url, retries = 2) {
       console.log(`🌐 Loading Target product (attempt ${i + 1}/${retries + 1}): ${url}`);
       
       await page.goto(url, {
-        waitUntil: 'networkidle',
+       waitUntil: 'domcontentloaded',
         timeout: 60000
       });
-
+      
       // Wait for Target-specific elements to confirm successful load
       await Promise.race([
         page.waitForSelector(SELECTORS.PRODUCT.TITLE, { timeout: 20000 }),
-        page.waitForSelector(SELECTORS.PRODUCT.CURRENT_PRICE, { timeout: 20000 })
+        page.waitForSelector(SELECTORS.PRODUCT.CURRENT_PRICE, { timeout: 20000 }),
+        page.waitForTimeout(8000) // Fallback timeout
       ]);
 
       return; // Success
