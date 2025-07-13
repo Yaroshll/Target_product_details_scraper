@@ -1,117 +1,149 @@
 // helpers/extractors.js
 import { formatHandleFromUrl, extractSKU, calculatePrices } from "./formatters.js";
 import { getDescription } from "./description.js";
-import { SELECTORS, DEFAULT_VALUES } from "./constants.js";
+import { SELECTORS, DEFAULT_VALUES } from "../constants.js";
 import { gotoWithRetries } from "./gotoWithRetries.js";
 
 export async function extractPrice(page) {
   try {
-    // Extract current price (sale price)
-    const currentPrice = await page.$eval(
-      SELECTORS.PRODUCT.CURRENT_PRICE,
-      el => {
-        const priceText = el.textContent.trim();
-        return parseFloat(priceText.replace(/[^\d.]/g, ''));
-      }
-    ).catch(() => null);
+    // 1. First try precise selectors
+    let currentPrice = await tryPriceSelectors(page, [
+      'span[data-test="product-price"]', // Primary current price
+      'span[data-test="current-price"]', // Alternative
+      'span.price__current-value' // Common class
+    ]);
 
-    // Extract original price (regular price)
-    const originalPrice = await page.$eval(
-      SELECTORS.PRODUCT.ORIGINAL_PRICE,
-      el => {
-        const priceText = el.textContent.trim();
-        return parseFloat(priceText.replace(/[^\d.]/g, ''));
-      }
-    ).catch(() => null);
+    let originalPrice = await tryPriceSelectors(page, [
+      'span.h-text-line-through', // Primary original price
+      'span[data-test="original-price"]', // Alternative
+      'span.price__compare' // Common class
+    ]);
 
-    // Fallback if direct selectors fail
+    // 2. Fallback to pattern matching if needed
     if (!currentPrice) {
-      const priceContainer = await page.$(SELECTORS.PRODUCT.PRICE_CONTAINER);
-      if (priceContainer) {
-        const priceText = await priceContainer.evaluate(el => el.textContent);
+      const priceText = await page.evaluate(() => {
+        const priceEl = document.querySelector('[data-test="product-regular-price"]');
+        return priceEl?.textContent;
+      });
+      
+      if (priceText) {
         const matches = priceText.match(/\$\d+\.\d{2}/g);
-        if (matches && matches.length > 0) {
-          return {
-            currentPrice: parseFloat(matches[0].replace(/[^\d.]/g, '')),
-            originalPrice: matches[1] ? parseFloat(matches[1].replace(/[^\d.]/g, '')) : null
-          };
+        if (matches) {
+          currentPrice = parseFloat(matches[0].replace(/[^\d.]/g, ''));
+          originalPrice = matches[1] ? parseFloat(matches[1].replace(/[^\d.]/g, '')) : null;
         }
       }
     }
 
-    if (!currentPrice) {
-      throw new Error('Could not extract valid current price');
+    // 3. Final validation
+    if (!currentPrice || isNaN(currentPrice)) {
+      throw new Error('Invalid price value extracted');
     }
 
-    return { currentPrice, originalPrice };
+    return { 
+      currentPrice,
+      originalPrice: originalPrice && !isNaN(originalPrice) ? originalPrice : null
+    };
+
   } catch (error) {
     console.error('⚠️ Price extraction failed:', error.message);
     throw error;
   }
 }
+
+async function tryPriceSelectors(page, selectors) {
+  for (const selector of selectors) {
+    try {
+      const price = await page.$eval(selector, el => {
+        const text = el.textContent.trim();
+        const value = text.replace(/[^\d.]/g, '');
+        return parseFloat(value);
+      });
+      if (price && !isNaN(price)) return price;
+    } catch (e) {
+      continue;
+    }
+  }
+  return null;
+}
+
 export async function extractTargetProductData(page, url) {
   try {
     await gotoWithRetries(page, url);
     console.info("✅ Page loaded, waiting for stability...");
     await page.waitForTimeout(3000);
 
+    // 1. Extract basic identifiers
     const handle = formatHandleFromUrl(url);
     const sku = extractSKU(url);
-    const title = await page.$eval(
-      SELECTORS.PRODUCT.TITLE,
-      el => el.textContent.trim()
-    ).catch(() => handle?.replace(/_/g, " ") || "");
+    const title = await extractTitle(page, handle);
 
-    const breadcrumbs = await page.$$eval(
-      SELECTORS.BREADCRUMBS.LINKS,
-      anchors => anchors.map(a => a.textContent.trim()).filter(Boolean).join(",")
-    ).catch(() => "");
-
-    const description = await getDescription(page);
+    // 2. Extract pricing data
     const { currentPrice, originalPrice } = await extractPrice(page);
-    
-    if (currentPrice === null) {
-      throw new Error('Could not extract valid current price');
-    }
+    const { variantPrice, compareAtPrice } = calculatePrices(currentPrice, originalPrice);
 
-    const { variantPrice, compareAtPrice } = calculatePrices(
-      currentPrice, 
-      originalPrice
-    );
+    // 3. Extract other product data
+    const breadcrumbs = await extractBreadcrumbs(page);
+    const description = await getDescription(page);
+    const imageHandles = await extractImages(page);
 
-    const imageHandles = await page.$$eval(
-      SELECTORS.IMAGE.SRC,
-      imgs => imgs.map(img => img.src).filter(Boolean)
-    ).catch(() => []);
-
-    const productRow = {
-      Handle: handle,
-      Title: title,
-      "Body (HTML)": description,
-      Vendor: DEFAULT_VALUES.VENDOR,
-      Type: breadcrumbs.split(',').pop()?.trim() || DEFAULT_VALUES.TYPE,
-      Tags: breadcrumbs,
-      "Variant SKU": sku,
-      "Cost per item": currentPrice,
-      "Original Price": originalPrice,
-      "Variant Price": variantPrice,
-      "Variant Compare At Price": compareAtPrice,
-      "Image Src": imageHandles[0] || "",
-      "Variant Fulfillment Service": DEFAULT_VALUES.FULFILLMENT_SERVICE,
-      "Variant Inventory Policy": DEFAULT_VALUES.INVENTORY_POLICY,
-      "Variant Inventory Tracker": DEFAULT_VALUES.INVENTORY_TRACKER,
-      Status: DEFAULT_VALUES.STATUS,
-      Published: DEFAULT_VALUES.PUBLISHED,
-      "product.metafields.custom.original_product_url": url,
+    // 4. Compile final product data
+    return {
+      productRow: {
+        Handle: handle,
+        Title: title,
+        "Body (HTML)": description,
+        Vendor: DEFAULT_VALUES.VENDOR,
+        Type: breadcrumbs.split(',').pop()?.trim() || DEFAULT_VALUES.TYPE,
+        Tags: breadcrumbs,
+        "Variant SKU": sku,
+        "Cost per item": currentPrice,
+        "Original Price": originalPrice,
+        "Variant Price": variantPrice,
+        "Variant Compare At Price": compareAtPrice,
+        "Image Src": imageHandles[0] || "",
+        ...DEFAULT_VALUES,
+        "product.metafields.custom.original_product_url": url,
+      },
+      extraImages: imageHandles.slice(1).map(src => ({
+        Handle: handle,
+        "Image Src": src
+      }))
     };
 
-    const extraImages = imageHandles.slice(1).map(src => ({
-      Handle: handle,
-      "Image Src": src,
-    }));
-
-    return { productRow, extraImages };
-    } catch (error) {
+  } catch (error) {
     console.error(`❌ Error processing ${url}:`, error.message);
-    throw error; // Or return null/error object as needed
-    }}
+    throw error;
+  }
+}
+
+// Helper functions
+async function extractTitle(page, fallbackTitle) {
+  try {
+    return await page.$eval(SELECTORS.PRODUCT.TITLE, el => el.textContent.trim());
+  } catch {
+    return fallbackTitle?.replace(/_/g, " ") || "";
+  }
+}
+
+async function extractBreadcrumbs(page) {
+  try {
+    return await page.$$eval(
+      SELECTORS.BREADCRUMBS.LINKS,
+      anchors => anchors.map(a => a.textContent.trim()).filter(Boolean).join(",")
+    );
+  } catch {
+    return "";
+  }
+}
+
+async function extractImages(page) {
+  try {
+    return await page.$$eval(
+      SELECTORS.IMAGE.SRC,
+      imgs => imgs.map(img => img.src).filter(Boolean)
+    );
+  } catch {
+    return [];
+  }
+}
