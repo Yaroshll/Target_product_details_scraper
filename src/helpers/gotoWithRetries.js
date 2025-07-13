@@ -4,6 +4,7 @@
  * @param {string} url - Target product URL
  * @param {number} retries - Number of retry attempts (default: 2)
  */
+import { SELECTORS } from './constants.js';
 export async function gotoTargetWithRetries(page, url, retries = 2) {
   for (let i = 0; i <= retries; i++) {
     try {
