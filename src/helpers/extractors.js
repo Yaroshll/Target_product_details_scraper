@@ -6,33 +6,49 @@ import { gotoWithRetries } from "./gotoWithRetries.js";
 
 export async function extractPrice(page) {
   try {
+    // Extract current price (sale price)
     const currentPrice = await page.$eval(
       SELECTORS.PRODUCT.CURRENT_PRICE,
       el => {
-        const text = el.textContent.trim();
-        return parseFloat(text.replace(/[^\d.]/g, '')) || null;
+        const priceText = el.textContent.trim();
+        return parseFloat(priceText.replace(/[^\d.]/g, ''));
       }
     ).catch(() => null);
 
+    // Extract original price (regular price)
     const originalPrice = await page.$eval(
       SELECTORS.PRODUCT.ORIGINAL_PRICE,
       el => {
-        const text = el.textContent.trim();
-        return parseFloat(text.replace(/[^\d.]/g, '')) || null;
+        const priceText = el.textContent.trim();
+        return parseFloat(priceText.replace(/[^\d.]/g, ''));
       }
     ).catch(() => null);
 
-    return { 
-      currentPrice,
-      originalPrice
-    };
+    // Fallback if direct selectors fail
+    if (!currentPrice) {
+      const priceContainer = await page.$(SELECTORS.PRODUCT.PRICE_CONTAINER);
+      if (priceContainer) {
+        const priceText = await priceContainer.evaluate(el => el.textContent);
+        const matches = priceText.match(/\$\d+\.\d{2}/g);
+        if (matches && matches.length > 0) {
+          return {
+            currentPrice: parseFloat(matches[0].replace(/[^\d.]/g, '')),
+            originalPrice: matches[1] ? parseFloat(matches[1].replace(/[^\d.]/g, '')) : null
+          };
+        }
+      }
+    }
+
+    if (!currentPrice) {
+      throw new Error('Could not extract valid current price');
+    }
+
+    return { currentPrice, originalPrice };
   } catch (error) {
-    console.error("⚠️ Price extraction failed:", error.message);
-    return { currentPrice: null, originalPrice: null };
+    console.error('⚠️ Price extraction failed:', error.message);
+    throw error;
   }
 }
-
-
 export async function extractTargetProductData(page, url) {
   try {
     await gotoWithRetries(page, url);

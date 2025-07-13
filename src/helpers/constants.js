@@ -11,8 +11,15 @@ export const SELECTORS = {
   // Product info selectors - made more robust
   PRODUCT: {
     TITLE: 'h1[data-test="product-title"]',
-    CURRENT_PRICE: '[data-test="current-price"]', // More specific than just product-price
-    ORIGINAL_PRICE: '[data-test="original-price"], .h-text-line-through', // Multiple fallbacks
+     // Current price (sale price)
+    CURRENT_PRICE: 'span[data-test="product-price"]',
+    
+    // Original price (regular price)
+    ORIGINAL_PRICE: 'span.h-text-line-through',
+    
+    // Price container for fallback
+    PRICE_CONTAINER: '[data-test="product-regular-price"]'
+  },
     DESCRIPTION: {
       MAIN: '[data-test="item-details-description"]',
       DETAILS: {
