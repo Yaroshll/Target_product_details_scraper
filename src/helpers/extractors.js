@@ -1,7 +1,7 @@
 // helpers/extractors.js
 import { formatHandleFromUrl, extractSKU, calculatePrices } from "./formatters.js";
 import { getDescription } from "./description.js";
-import { SELECTORS, DEFAULT_VALUES } from "../constants.js";
+import { SELECTORS, DEFAULT_VALUES } from "./constants.js";
 import { gotoWithRetries } from "./gotoWithRetries.js";
 
 export async function extractPrice(page) {
