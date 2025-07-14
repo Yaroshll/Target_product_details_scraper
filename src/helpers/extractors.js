@@ -174,8 +174,6 @@ function parsePrice(text) {
   return isNaN(value) ? null : value;
 }
 
-// ... keep the rest of your existing helper functions (extractTitle, extractBreadcrumbs, extractImages) ...
-
 // Helper: extract title
 async function extractTitle(page, fallbackTitle) {
   try {

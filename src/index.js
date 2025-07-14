@@ -18,8 +18,11 @@ import { TIMEOUTS } from './helpers/constants.js';
 
   for (const url of urls) {
     try {
-      const { productRow, extraImages } = await extractTargetProductData(page, url);
-      await saveToCSVAndExcel(productRow, extraImages);
+      // Now receiving variantRows from extractTargetProductData
+      const { productRow, extraImages, variantRows } = await extractTargetProductData(page, url);
+      
+      // Pass all data to save function
+      await saveToCSVAndExcel(productRow, extraImages, variantRows);
       console.log('✅ Saved:', url);
     } catch (err) {
       console.error('❌ Failed:', err.message);
